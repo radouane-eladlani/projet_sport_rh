@@ -25,8 +25,8 @@ df_sport = pd.read_excel("../data/Données+Sportive.xlsx")
 df_rh = df_rh.rename(columns={
     "ID salarié": "employee_id",
     "Salaire brut": "salaire_brut",
-    "Adresse du domicile": "address_domicile",
-    "Moyen de déplacement": "transport_mode"
+    "Adresse du domicile": "domicile_address",
+    "Moyen de déplacement": "moyen_transport"
 })
 
 df_sport = df_sport.rename(columns={
@@ -42,7 +42,7 @@ df_sport = df_sport.rename(columns={
 # On normalise les modes de transport :
 # - suppression espaces inutiles
 # - mise en majuscules pour uniformiser les valeurs
-df_rh["transport_mode"] = df_rh["transport_mode"].str.strip().str.upper()
+df_rh["moyen_transport"] = df_rh["moyen_transport"].str.strip().str.upper()
 
 
 # =========================
@@ -69,3 +69,4 @@ print(df_rh.head())
 
 print("\n=== SPORT ===")
 print(df_sport.head())
+print(df_rh["moyen_transport"].unique())

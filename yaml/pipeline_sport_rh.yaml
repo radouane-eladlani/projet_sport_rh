@@ -1,0 +1,62 @@
+id: pipeline_sport_rh
+namespace: company.data
+
+tasks:
+
+# ==========================================================
+# 1. INGESTION POSTGRES
+# ==========================================================
+  - id: ingestion_postgres
+    type: io.kestra.plugin.scripts.python.Commands
+    taskRunner:
+      type: io.kestra.plugin.core.runner.Process
+
+    env:
+      DB_HOST: postgres_data_system
+
+    beforeCommands:
+      - pip install pandas openpyxl sqlalchemy psycopg2-binary python-dotenv
+
+    commands:
+      - python3 /app/scripts/05_charger_base_donnees.py
+
+
+# ==========================================================
+# 2. CALCUL KPI SPARK (CORRIGÉ)
+# ==========================================================
+  - id: calcul_kpi_spark
+    type: io.kestra.plugin.scripts.shell.Commands
+    taskRunner:
+      type: io.kestra.plugin.core.runner.Process
+
+    env:
+      DB_HOST: postgres_data_system
+      PYSPARK_PYTHON: python3
+      PYSPARK_DRIVER_PYTHON: python3
+
+    commands:
+      # ==================================================
+      # IMPORTANT : versions ALIGNÉES (STABLE)
+      # ==================================================
+      - pip install --no-cache-dir pyspark==3.4.4 delta-spark==2.4.0 python-dotenv jdk4py==17.0.9.2
+
+      # JAVA_HOME propre
+      - export JAVA_HOME=$(python3 -c "import jdk4py; print(jdk4py.JAVA_HOME)")
+      - echo "JAVA_HOME = $JAVA_HOME"
+      # (clean logs Spark)
+      - export PYSPARK_SUBMIT_ARGS="--conf spark.ui.showConsoleProgress=false pyspark-shell"
+
+      # DEBUG VERSION
+      - python3 -c "import pyspark; print('Spark version:', pyspark.__version__)"
+
+      # RUN SPARK JOB
+      - python3 /app/scripts/07_creer_kpi_spark.py
+
+
+# ==========================================================
+# TRIGGER
+# ==========================================================
+triggers:
+  - id: planification_quotidienne
+    type: io.kestra.plugin.core.trigger.Schedule
+    cron: "0 6 * * *"

@@ -1,95 +1,54 @@
-# =========================
-# IMPORT DES LIBRAIRIES
-# =========================
-
 import pandas as pd
-import random # random → génération de valeurs aléatoires
+import random
 from datetime import datetime, timedelta
 
-
-# =========================
-# CHARGEMENT DES DONNÉES FUSIONNÉES
-# =========================
-
-# On charge le fichier issu de l’étape 3 (RH + sport)
-# Ce fichier contient toutes les informations des salariés
+# Chargement
 df = pd.read_excel("../data/donnees_fusionnees.xlsx")
 
+activities = []
 
-# =========================
-# LISTE POUR STOCKER LES ACTIVITÉS SIMULÉES
-# =========================
+# Génération de dates ET heures sur les 12 derniers mois
+def random_date_complete():
+    start = datetime(2025, 6, 1) # Pour couvrir les 12 derniers mois par rapport à juin 2026
+    random_minutes = random.randint(0, 365 * 24 * 60)
+    return start + timedelta(minutes=random_minutes)
 
-# Cette liste contiendra toutes les activités sportives générées
-# Objectif : créer un historique fictif pour analyse + futur Slack
-activities_fictives = []
-
-
-# =========================
-# FONCTION DE GÉNÉRATION DE DATE
-# =========================
-
-# Permet de simuler une activité sur l’année 2025
-def random_date():
-    start = datetime(2025, 1, 1)
-    return start + timedelta(days=random.randint(0, 365))
-
-
-# =========================
-# PARCOURS DES SALARIÉS
-# =========================
-
-# Chaque ligne = un salarié
 for _, row in df.iterrows():
-
-    employee_id = row["employee_id"]
-    pratique_sport = row["pratique_sport"]
-
-
-    # =========================
-    # CAS : PAS DE SPORT
-    # =========================
-
-    # Si le salarié ne pratique pas de sport → aucune activité simulée
-    if pratique_sport == "AUCUN":
+    sport = str(row.get("pratique_sport", "AUCUN")).upper().strip()
+    if sport == "AUCUN" or pd.isna(row.get("pratique_sport")):
         continue
+    
+    # Simulation incluant des salariés sous la barre des 15 activités et d'autres au-dessus
+    nb_activities = random.randint(5, 35) 
+    
+    for _ in range(nb_activities):
+        start_dt = random_date_complete()
+        duration_min = random.randint(20, 120)
+        end_dt = start_dt + timedelta(minutes=duration_min)
+        
+        # Règle de la note de cadrage : vide si non pertinent (ex: Escalade, Yoga...)
+        if sport in ["ESCALADE", "YOGA", "MUSCULATION"]:
+            distance_m = None
+            km_text = ""
+        else:
+            distance_m = random.randint(2000, 15000)
+            km_text = f"de {round(distance_m / 1000, 1)} km "
 
-
-    # =========================
-    # SIMULATION D’ACTIVITÉS SPORTIVES
-    # =========================
-
-    # On simule un historique d’activités pour les salariés sportifs
-    # ⚠️ Ceci est uniquement une simulation (POC), pas une règle métier
-
-    nb_activites = random.randint(5, 15)
-
-
-    for _ in range(nb_activites):
-
-        activities_fictives.append({
-            "employee_id": employee_id,
-            "pratique_sport": pratique_sport,
-            "date": random_date()
+        # Formatage des messages Slack comme demandé dans l'énoncé
+        # "Bravo [Nom]! Tu viens de [sport] [distance] en [temps]!"
+        nom_complet = f"{row.get('Prénom', '')} {row.get('Nom', '')}".strip()
+        commentaire = f"Bravo {nom_complet} ! Une session de {sport.lower()} {km_text}en {duration_min} min ! Quelle énergie ! 🔥"
+        
+        activities.append({
+            "ID": len(activities) + 1,
+            "ID salarié": row["employee_id"],
+            "Date de début de l'activité": start_dt.strftime("%d/%m/%Y %H:%M"),
+            "Type": sport,
+            "Distance": distance_m if distance_m is not None else "",
+            "Date de fin de l'activité": end_dt.strftime("%d/%m/%Y %H:%M"),
+            "Commentaire": commentaire
         })
 
-
-# =========================
-# CONVERSION EN DATAFRAME
-# =========================
-
-df_activities = pd.DataFrame(activities_fictives)
-
-
-# =========================
-# EXPORT DU FICHIER
-# =========================
-
+df_activities = pd.DataFrame(activities)
 df_activities.to_excel("../data/activites_sportives.xlsx", index=False)
-
-
-# =========================
-# AFFICHAGE POUR CONTRÔLE
-# =========================
-
-print(df_activities.head())
+print(f"Génération terminée : {len(df_activities)} lignes générées de façon conforme.")

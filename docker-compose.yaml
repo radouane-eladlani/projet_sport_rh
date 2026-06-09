@@ -1,0 +1,103 @@
+version: '3.7'
+
+services:
+  postgres:
+    image: debezium/postgres:15
+    container_name: postgres_data_system
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=${DB_USER}         
+      - POSTGRES_PASSWORD=${DB_PASSWORD} 
+      - POSTGRES_DB=${DB_NAME}
+    command: ["postgres", "-c", "wal_level=logical"]
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - indu_network
+
+  redpanda:
+    image: docker.redpanda.com/redpandadata/redpanda:v23.2.1
+    container_name: redpanda_broker
+    command:
+      - redpanda start
+      - --smp 1
+      - --overprovisioned
+      - --kafka-addr internal://0.0.0.0:9092,external://0.0.0.0:19092
+      - --advertise-kafka-addr internal://redpanda:9092,external://localhost:19092
+      - --pandaproxy-addr 0.0.0.0:8082
+      - --advertise-pandaproxy-addr localhost:8082
+    ports:
+      - "19092:19092"
+      - "8082:8082"
+      - "9644:9644"
+    networks:
+      - indu_network
+
+  redpanda-console:
+    image: docker.redpanda.com/redpandadata/console:v2.3.1
+    container_name: redpanda_console
+    entrypoint: /bin/sh
+    command: -c "echo \"$$CONSOLE_CONFIG_FILE\" > /tmp/config.yml; /app/console --config.filepath=/tmp/config.yml"
+    ports:
+      - "8888:8080" # http://localhost:8888
+    environment:
+      CONSOLE_CONFIG_FILE: |
+        kafka:
+          brokers: ["redpanda:9092"]
+    depends_on:
+      - redpanda
+    networks:
+      - indu_network
+
+  debezium:
+    image: debezium/connect:2.4
+    container_name: debezium_connect
+    ports:
+      - "8083:8083" #
+    environment:
+      - BOOTSTRAP_SERVERS=redpanda:9092
+      - GROUP_ID=1
+      - CONFIG_STORAGE_TOPIC=my_connect_configs
+      - OFFSET_STORAGE_TOPIC=my_connect_offsets
+      - STATUS_STORAGE_TOPIC=my_connect_statuses
+    depends_on:
+      - redpanda
+      - postgres
+    networks:
+      - indu_network
+
+  kestra:
+    image: kestra/kestra:latest
+    container_name: kestra_orchestrator
+    command: server standalone
+    ports:
+      - "8081:8080" # Kestra reste accessible sur http://localhost:8081
+    environment:
+      KESTRA_CONFIGURATION: |
+        kestra:
+          repository:
+            type: h2
+          storage:
+            type: local
+            local:
+              base-path: /app/kestra_storage
+          queue:
+            type: h2
+    env_file:
+      - .env        
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock 
+      - ./scripts:/app/scripts                    
+      - ./data:/app/data                          
+    depends_on:
+      - postgres
+    networks:
+      - indu_network
+
+volumes:
+  pgdata:
+
+networks:
+  indu_network:
+    driver: bridge
