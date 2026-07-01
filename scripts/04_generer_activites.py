@@ -1,54 +1,89 @@
 import pandas as pd
 import random
+import time
+import requests
 from datetime import datetime, timedelta
 
-# Chargement
-df = pd.read_excel("../data/donnees_fusionnees.xlsx")
+# Chargement du fichier Excel RH
+# contient les employés + leur sport déclaré
+df = pd.read_csv("./data/donnees_fusionnees.csv")
+# Nettoyage des noms de colonnes (supprime espaces invisibles)
+df.columns = df.columns.str.strip()
 
-activities = []
+# Définition de la période de simulation (1 an complet)
+START = datetime(2025, 1, 1)
+END = datetime(2025, 12, 31)
 
-# Génération de dates ET heures sur les 12 derniers mois
-def random_date_complete():
-    start = datetime(2025, 6, 1) # Pour couvrir les 12 derniers mois par rapport à juin 2026
-    random_minutes = random.randint(0, 365 * 24 * 60)
-    return start + timedelta(minutes=random_minutes)
+# Fonction qui génère une date aléatoire dans l'année
+def random_date():
+    return START + timedelta(
+        seconds=random.randint(
+            0,
+            int((END - START).total_seconds())
+        )
+    )
 
-for _, row in df.iterrows():
-    sport = str(row.get("pratique_sport", "AUCUN")).upper().strip()
-    if sport == "AUCUN" or pd.isna(row.get("pratique_sport")):
+# Message de démarrage du producer
+print("STREAM PRODUCER ACTIVÉ")
+
+# Boucle infinie = simulation temps réel (streaming type Strava)
+while True:
+
+    # Sélection d'un salarié aléatoire dans le fichier RH
+    row = df.sample(1).iloc[0]
+
+    # Récupération du sport pratiqué (normalisation)
+    sport = str(row["pratique_sport"]).upper().strip()
+
+    # Si aucun sport déclaré, on ignore cette ligne
+    if sport == "AUCUN":
         continue
-    
-    # Simulation incluant des salariés sous la barre des 15 activités et d'autres au-dessus
-    nb_activities = random.randint(5, 35) 
-    
-    for _ in range(nb_activities):
-        start_dt = random_date_complete()
-        duration_min = random.randint(20, 120)
-        end_dt = start_dt + timedelta(minutes=duration_min)
-        
-        # Règle de la note de cadrage : vide si non pertinent (ex: Escalade, Yoga...)
-        if sport in ["ESCALADE", "YOGA", "MUSCULATION"]:
-            distance_m = None
-            km_text = ""
-        else:
-            distance_m = random.randint(2000, 15000)
-            km_text = f"de {round(distance_m / 1000, 1)} km "
 
-        # Formatage des messages Slack comme demandé dans l'énoncé
-        # "Bravo [Nom]! Tu viens de [sport] [distance] en [temps]!"
-        nom_complet = f"{row.get('Prénom', '')} {row.get('Nom', '')}".strip()
-        commentaire = f"Bravo {nom_complet} ! Une session de {sport.lower()} {km_text}en {duration_min} min ! Quelle énergie ! 🔥"
-        
-        activities.append({
-            "ID": len(activities) + 1,
-            "ID salarié": row["employee_id"],
-            "Date de début de l'activité": start_dt.strftime("%d/%m/%Y %H:%M"),
-            "Type": sport,
-            "Distance": distance_m if distance_m is not None else "",
-            "Date de fin de l'activité": end_dt.strftime("%d/%m/%Y %H:%M"),
-            "Commentaire": commentaire
-        })
+    # Génération de la date de début de l'activité
+    start_dt = random_date()
 
-df_activities = pd.DataFrame(activities)
-df_activities.to_excel("../data/activites_sportives.xlsx", index=False)
-print(f"Génération terminée : {len(df_activities)} lignes générées de façon conforme.")
+    # Durée aléatoire entre 20 min et 2h (en secondes)
+    duration_sec = random.randint(20 * 60, 120 * 60)
+
+    # Calcul automatique de la date de fin
+    end_dt = start_dt + timedelta(seconds=duration_sec)
+
+    # Gestion de la distance selon le sport
+    # certains sports n'ont pas de distance (yoga, muscu)
+    if sport in ["YOGA", "MUSCULATION"]:
+        distance_m = 0
+    else:
+        distance_m = random.randint(2000, 15000)
+
+    # Construction de l'événement (format API / Strava simulé)
+    activity = {
+        # ID salarié
+        "id_salarie": int(row["employee_id"]),
+
+        # type de sport
+        "type_sport": sport,
+
+        # distance en mètres
+        "distance": distance_m,
+
+        # durée en secondes
+        "duration_sec": duration_sec,
+
+        # date de début format SQL
+        "date_debut": start_dt.strftime("%Y-%m-%d %H:%M:%S"),
+
+        # date de fin format SQL
+        "date_fin": end_dt.strftime("%Y-%m-%d %H:%M:%S"),
+
+        # commentaire humain pour debug / Slack
+        "commentaire": f"{row['Prénom']} {row['Nom']} - {sport}"
+    }
+
+    # Envoi de l'événement vers ton API FastAPI
+    requests.post("http://localhost:8000/ingest", json=activity)
+
+    # ✔ log de confirmation dans le terminal
+    print(" Event envoyé")
+
+    # pause aléatoire pour simuler un flux réel
+    time.sleep(random.randint(2, 5))

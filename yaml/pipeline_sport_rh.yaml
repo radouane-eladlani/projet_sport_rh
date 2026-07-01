@@ -1,61 +1,195 @@
-id: pipeline_sport_rh
-namespace: company.data
+id: pipeline_sport
+namespace: com.sportdatasolution.rh
+
+# ==============================================================================
+# PIPELINE GLOBAL SPORT RH
+# ==============================================================================
+#
+# OBJECTIF :
+#
+# Ce pipeline Kestra automatise entièrement la chaîne de traitement des données.
+#
+# Chaque jour il :
+#
+# 1. Récupère les données sportives stockées dans la zone Bronze
+#
+# 2. Lance le Script 08 pour nettoyer et enrichir les données
+#    afin de créer la couche Silver
+#
+# 3. Lance le Script 09 pour calculer les indicateurs RH
+#    et créer la couche Gold
+#
+# 4. Envoie une notification Slack lorsque le traitement est terminé
+#
+# Ce pipeline évite toute intervention manuelle et garantit que
+# les indicateurs RH sont recalculés automatiquement chaque jour.
+#
+# ==============================================================================
+
+description: Pipeline d'orchestration global - Traitement Spark Silver et Gold automatisé.
 
 tasks:
 
-# ==========================================================
-# 1. INGESTION POSTGRES
-# ==========================================================
-  - id: ingestion_postgres
-    type: io.kestra.plugin.scripts.python.Commands
-    taskRunner:
-      type: io.kestra.plugin.core.runner.Process
+# ==============================================================================
+# 1. ETAPE SILVER : NETTOYAGE ET ENRICHISSEMENT DES DONNÉES
+# ==============================================================================
 
-    env:
-      DB_HOST: postgres_data_system
+#
+# Cette tâche exécute le Script 08.
+#
+# Son rôle est de transformer les données brutes de la couche Bronze
+# en données fiables et exploitables.
+#
+# Exemples :
+#
+# - correction des formats de dates
+# - suppression des doublons
+# - conversion des types de données
+# - ajout des informations RH
+# - ajout du contrôle fraude transport
+#
+# Résultat :
+#
+# Une nouvelle table Silver propre est créée.
+#
 
-    beforeCommands:
-      - pip install pandas openpyxl sqlalchemy psycopg2-binary python-dotenv
-
-    commands:
-      - python3 /app/scripts/05_charger_base_donnees.py
-
-
-# ==========================================================
-# 2. CALCUL KPI SPARK (CORRIGÉ)
-# ==========================================================
-  - id: calcul_kpi_spark
+  - id: nettoyage_silver_spark
     type: io.kestra.plugin.scripts.shell.Commands
+
     taskRunner:
       type: io.kestra.plugin.core.runner.Process
 
     env:
-      DB_HOST: postgres_data_system
       PYSPARK_PYTHON: python3
       PYSPARK_DRIVER_PYTHON: python3
 
-    commands:
-      # ==================================================
-      # IMPORTANT : versions ALIGNÉES (STABLE)
-      # ==================================================
-      - pip install --no-cache-dir pyspark==3.4.4 delta-spark==2.4.0 python-dotenv jdk4py==17.0.9.2
+    taskCache:
+      enabled: true
+      ttl: PT24H
 
-      # JAVA_HOME propre
+    commands:
+
+      # Installation des bibliothèques nécessaires à Spark et Delta Lake
+      - pip install --user --no-cache-dir pyspark==3.4.4 delta-spark==2.4.0 python-dotenv jdk4py==17.0.9.2 pandas
+
+      # Déclaration automatique de Java pour Spark
       - export JAVA_HOME=$(python3 -c "import jdk4py; print(jdk4py.JAVA_HOME)")
-      - echo "JAVA_HOME = $JAVA_HOME"
-      # (clean logs Spark)
+
+      # Désactive la barre de progression Spark dans le terminal
       - export PYSPARK_SUBMIT_ARGS="--conf spark.ui.showConsoleProgress=false pyspark-shell"
 
-      # DEBUG VERSION
-      - python3 -c "import pyspark; print('Spark version:', pyspark.__version__)"
+      # Création du dossier de travail temporaire
+      - mkdir -p data
 
-      # RUN SPARK JOB
-      - python3 /app/scripts/07_creer_kpi_spark.py
+      # Copie des données du projet dans l'espace de travail Kestra
+      - cp -r /app/data/* ./data/
 
+      # Exécution du Script 08 (Bronze -> Silver)
+      - python3 /app/scripts/08_creer_silver.py
 
-# ==========================================================
-# TRIGGER
-# ==========================================================
+      # Recopie des nouvelles données Silver vers le stockage principal
+      - cp -r ./data/* /app/data/
+
+    description: "Prend les données brutes de la zone Bronze, les nettoie et crée la zone Silver propre."
+
+# ==============================================================================
+# 2. ETAPE GOLD : CALCUL DES KPI RH
+# ==============================================================================
+
+#
+# Cette tâche exécute le Script 09.
+#
+# Son rôle est de transformer les données Silver en indicateurs
+# décisionnels utilisables par la direction RH.
+#
+# Exemples de calculs :
+#
+# - nombre d'activités sportives par salarié
+# - nombre d'activités valides
+# - calcul de la prime sportive
+# - calcul des jours bien-être
+#
+# Résultat :
+#
+# Une table Gold est créée et servira directement
+# aux tableaux de bord Power BI.
+#
+
+  - id: calcul_kpi_gold_spark
+    type: io.kestra.plugin.scripts.shell.Commands
+
+    taskRunner:
+      type: io.kestra.plugin.core.runner.Process
+
+    env:
+      PYSPARK_PYTHON: python3
+      PYSPARK_DRIVER_PYTHON: python3
+
+    taskCache:
+      enabled: true
+      ttl: PT24H
+
+    commands:
+
+      # Installation des composants Spark nécessaires au calcul
+      - pip install --user --no-cache-dir pyspark==3.4.4 delta-spark==2.4.0 python-dotenv jdk4py==17.0.9.2
+
+      # Configuration automatique de Java
+      - export JAVA_HOME=$(python3 -c "import jdk4py; print(jdk4py.JAVA_HOME)")
+
+      # Réduction des logs Spark dans le terminal
+      - export PYSPARK_SUBMIT_ARGS="--conf spark.ui.showConsoleProgress=false pyspark-shell"
+
+      # Création du répertoire temporaire
+      - mkdir -p data
+
+      # Copie locale des données Silver
+      - cp -r /app/data/* ./data/
+
+      # Exécution du Script 09 (Silver -> Gold)
+      - python3 /app/scripts/09_creer_gold.py
+
+    description: "Exécute Spark 09 à haute vitesse sur les données Silver fraîchement nettoyées."
+
+# ==============================================================================
+# NOTIFICATIONS (SUCCÈS / ÉCHEC) ET PLANIFICATION
+# ==============================================================================
+
+  - id: notification_slack_succes
+    type: io.kestra.plugin.core.http.Request
+    uri: "https://hooks.slack.com/services/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"
+    method: POST
+    contentType: application/json
+    body: |
+      {
+        "text": "*Pipeline SportRH terminé !* L'exécution planifiée par le cron s'est déroulée avec succès. Le calcul des données est à jour et les fichiers finaux sont prêts."
+      }
+    allowFailed: true
+
+errors:
+  - id: notification_slack_echec
+    type: io.kestra.plugin.core.http.Request
+    uri: "https://hooks.slack.com/services/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"
+    method: POST
+    contentType: application/json
+    body: |
+      {
+        "text": "*ALERTE : Panne sur le pipeline SportRH !* L'exécution du cron a échoué. Un script ou un contrôle qualité a rencontré une erreur. Vérifier les logs sur Kestra. "
+      }
+    allowFailed: true
+
+# ==============================================================================
+# PLANIFICATION AUTOMATIQUE (CRON)
+# ==============================================================================
+
+# Ce déclencheur lance automatiquement le pipeline
+# tous les jours à 06h00 du matin.
+#
+# Ainsi :
+# - Les nouvelles activités sportives de la veille sont intégrées.
+# - Les contrôles qualité et validations sont exécutés.
+# - Les fichiers de données des couches Silver et Gold sont recalculés.
+#
 triggers:
   - id: planification_quotidienne
     type: io.kestra.plugin.core.trigger.Schedule

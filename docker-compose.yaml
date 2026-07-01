@@ -1,103 +1,181 @@
-version: '3.7'
+version: "3.7"
+
+# ==============================================================================
+# DÉFINITION DES SERVICES (ARCHITECTURE DATA PIPELINE)
+# ==============================================================================
+# Ce docker-compose met en place toute l'architecture
+#
+# PostgreSQL → Debezium → Redpanda → Kafka Consumer → Analytics
+# + outils de monitoring et orchestration
+# ==============================================================================
 
 services:
-  postgres:
-    image: debezium/postgres:15
-    container_name: postgres_data_system
-    ports:
-      - "5432:5432"
-    environment:
-      - POSTGRES_USER=${DB_USER}         
-      - POSTGRES_PASSWORD=${DB_PASSWORD} 
-      - POSTGRES_DB=${DB_NAME}
-    command: ["postgres", "-c", "wal_level=logical"]
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    networks:
-      - indu_network
 
-  redpanda:
-    image: docker.redpanda.com/redpandadata/redpanda:v23.2.1
-    container_name: redpanda_broker
-    command:
-      - redpanda start
-      - --smp 1
-      - --overprovisioned
-      - --kafka-addr internal://0.0.0.0:9092,external://0.0.0.0:19092
-      - --advertise-kafka-addr internal://redpanda:9092,external://localhost:19092
-      - --pandaproxy-addr 0.0.0.0:8082
-      - --advertise-pandaproxy-addr localhost:8082
-    ports:
-      - "19092:19092"
-      - "8082:8082"
-      - "9644:9644"
-    networks:
-      - indu_network
+# ==============================================================================
+# 1. POSTGRESQL (SOURCE DE DONNÉES + CDC)
+# ==============================================================================
+postgres:
+  # Image PostgreSQL déjà configurée avec support Debezium (WAL logique)
+  image: debezium/postgres:15
+  container_name: postgres_data_system
 
-  redpanda-console:
-    image: docker.redpanda.com/redpandadata/console:v2.3.1
-    container_name: redpanda_console
-    entrypoint: /bin/sh
-    command: -c "echo \"$$CONSOLE_CONFIG_FILE\" > /tmp/config.yml; /app/console --config.filepath=/tmp/config.yml"
-    ports:
-      - "8888:8080" # http://localhost:8888
-    environment:
-      CONSOLE_CONFIG_FILE: |
-        kafka:
-          brokers: ["redpanda:9092"]
-    depends_on:
-      - redpanda
-    networks:
-      - indu_network
+  # Exposition du port PostgreSQL vers la machine locale
+  ports:
+    - "5432:5432"
 
-  debezium:
-    image: debezium/connect:2.4
-    container_name: debezium_connect
-    ports:
-      - "8083:8083" #
-    environment:
-      - BOOTSTRAP_SERVERS=redpanda:9092
-      - GROUP_ID=1
-      - CONFIG_STORAGE_TOPIC=my_connect_configs
-      - OFFSET_STORAGE_TOPIC=my_connect_offsets
-      - STATUS_STORAGE_TOPIC=my_connect_statuses
-    depends_on:
-      - redpanda
-      - postgres
-    networks:
-      - indu_network
+  # Variables d'environnement pour créer la base automatiquement
+  environment:
+    POSTGRES_USER: ${DB_USER}
+    POSTGRES_PASSWORD: ${DB_PASSWORD}
+    POSTGRES_DB: ${DB_NAME}
 
-  kestra:
-    image: kestra/kestra:latest
-    container_name: kestra_orchestrator
-    command: server standalone
-    ports:
-      - "8081:8080" # Kestra reste accessible sur http://localhost:8081
-    environment:
-      KESTRA_CONFIGURATION: |
-        kestra:
-          repository:
-            type: h2
-          storage:
-            type: local
-            local:
-              base-path: /app/kestra_storage
-          queue:
-            type: h2
-    env_file:
-      - .env        
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock 
-      - ./scripts:/app/scripts                    
-      - ./data:/app/data                          
-    depends_on:
-      - postgres
-    networks:
-      - indu_network
+  # Activation du mode WAL logique (OBLIGATOIRE pour Debezium)
+  # wal_level=logical permet de capturer les changements SQL (INSERT/UPDATE/DELETE)
+  command: ["postgres", "-c", "wal_level=logical"]
 
+  # Volume pour persister les données même si le container redémarre
+  volumes:
+    - pgdata:/var/lib/postgresql/data
+
+  # Réseau partagé entre tous les services
+  networks:
+    - indu_network
+
+
+# ==============================================================================
+# 2. REDPANDA (BUS D'ÉVÉNEMENTS)
+# ==============================================================================
+redpanda:
+  # Redpanda est un broker compatible Kafka (plus léger et rapide)
+  image: docker.redpanda.com/redpandadata/redpanda:v23.2.1
+  container_name: redpanda_broker
+
+  # Configuration du broker Kafka
+  command:
+    - redpanda start
+    - --smp 1  # nombre de CPU utilisés
+    - --overprovisioned  # mode dev (moins strict sur les ressources)
+
+    # Ports Kafka internes et externes
+    - --kafka-addr internal://0.0.0.0:9092,external://0.0.0.0:19092
+
+    # Adresse visible depuis la machine locale
+    - --advertise-kafka-addr internal://redpanda:9092,external://localhost:19092
+
+    # API HTTP (optionnel, utilisé par console)
+    - --pandaproxy-addr 0.0.0.0:8082
+    - --advertise-pandaproxy-addr localhost:8082
+
+  # Ports exposés vers la machine
+  ports:
+    - "19092:19092"  # Kafka client
+    - "8082:8082"    # API HTTP
+    - "9644:9644"    # monitoring interne
+
+  networks:
+    - indu_network
+
+
+# ==============================================================================
+# 3. DEBEZIUM (CHANGE DATA CAPTURE)
+# ==============================================================================
+debezium:
+  # Debezium capture les changements PostgreSQL en temps réel
+  image: debezium/connect:2.4
+  container_name: debezium_connect
+
+  ports:
+    - "8083:8083"  # API REST pour configurer les connecteurs
+
+  environment:
+    # Connexion au broker Redpanda (Kafka compatible)
+    BOOTSTRAP_SERVERS: redpanda:9092
+
+    # Configuration interne Kafka Connect
+    GROUP_ID: 1
+    CONFIG_STORAGE_TOPIC: connect_configs
+    OFFSET_STORAGE_TOPIC: connect_offsets
+    STATUS_STORAGE_TOPIC: connect_statuses
+
+  # Dépendances : Debezium ne démarre pas sans Postgres et Redpanda
+  depends_on:
+    - postgres
+    - redpanda
+
+  networks:
+    - indu_network
+
+
+# ==============================================================================
+# 4. REDPANDA CONSOLE (INTERFACE VISUELLE KAFKA)
+# ==============================================================================
+redpanda-console:
+  # Interface web pour voir les topics Kafka/Redpanda
+  image: docker.redpanda.com/redpandadata/console:v2.3.1
+  container_name: redpanda_console
+
+  ports:
+    - "8888:8080"  # accès navigateur
+
+  environment:
+    # Configuration pour se connecter au broker Redpanda
+    CONSOLE_CONFIG_FILE: |
+      kafka:
+        brokers: ["redpanda:9092"]
+
+  depends_on:
+    - redpanda
+
+  networks:
+    - indu_network
+
+
+# ==============================================================================
+# 5. KESTRA (ORCHESTRATION PIPELINE - OPTIONNEL)
+# ==============================================================================
+kestra:
+  # Kestra = orchestrateur (comme Airflow)
+  image: kestra/kestra:latest
+  container_name: kestra_orchestrator
+
+  command: server standalone
+
+  ports:
+    - "8081:8080"  # http://localhost:8081/ui/
+
+  environment:
+    # Configuration simple (mode dev)
+    KESTRA_CONFIGURATION: |
+      kestra:
+        repository:
+          type: h2   # base interne légère
+        storage:
+          type: local
+          local:
+            base-path: /app/kestra_storage
+        queue:
+          type: h2
+
+  # Volumes partagés avec ta machine locale
+  volumes:
+    - /var/run/docker.sock:/var/run/docker.sock
+    - ./scripts:/app/scripts
+    - ./data:/app/data
+
+  networks:
+    - indu_network
+
+
+# ==============================================================================
+# STOCKAGE LOCAL (PERSISTENCE POSTGRES)
+# ==============================================================================
 volumes:
   pgdata:
 
+
+# ==============================================================================
+# RÉSEAU COMMUN (TOUS LES SERVICES COMMUNIQUENT ENTRE EUX)
+# ==============================================================================
 networks:
   indu_network:
     driver: bridge
