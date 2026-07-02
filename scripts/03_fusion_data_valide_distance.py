@@ -3,16 +3,16 @@
 # ==============================================================================
 
 # OBJECTIF DU SCRIPT :
-#
 # Ce script sert à enrichir les données RH en combinant plusieurs sources :
-#
+
 # 1. Données RH (salariés : adresse, salaire, transport…)
 # 2. Données sportives (activité physique)
 # 3. Fusion des deux datasets sur l’identifiant salarié
 # 4. Calcul de la distance domicile ↔ entreprise via Google Maps API
 # 5. Détection d’anomalies (règles métier sur mobilité douce)
-#
+
 # Résultat final : un dataset enrichi avec distance + contrôle de cohérence
+
 
 import pandas as pd
 import requests
@@ -42,6 +42,7 @@ GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY")
 print(f"DEBUG: Chargement du .env depuis {env_path}")
 print(f"DEBUG: Clé API trouvée : {'Oui' if GOOGLE_MAPS_API_KEY else 'Non'}")
 
+
 # ==============================================================================
 # 2. CHARGEMENT DES DONNÉES SOURCES
 # ==============================================================================
@@ -52,29 +53,40 @@ df_rh = pd.read_excel("./data/Données+RH.xlsx")
 # Données sportives
 df_sport = pd.read_excel("./data/Données+Sportive.xlsx")
 
+
 # ==============================================================================
 # 3. NORMALISATION DES DONNÉES
 # ==============================================================================
 
 # Harmonisation des noms de colonnes RH pour faciliter la fusion
 df_rh = df_rh.rename(columns={
+
     "ID salarié": "employee_id",
     "Salaire brut": "salaire_brut",
     "Adresse du domicile": "domicile_address",
     "Moyen de déplacement": "moyen_transport"
+
 })
+
+
+
+
 
 # Harmonisation des colonnes sport
 df_sport = df_sport.rename(columns={
+
     "ID salarié": "employee_id",
     "Pratique d'un sport": "pratique_sport"
+
 })
+
 
 # Nettoyage des valeurs sport (évite null, casse et espaces)
 df_sport["pratique_sport"] = df_sport["pratique_sport"].fillna("AUCUN").str.upper().str.strip()
 
 # Normalisation du mode de transport
 df_rh["moyen_transport"] = df_rh["moyen_transport"].astype(str).str.upper().str.strip()
+
 
 # ==============================================================================
 # 4. FUSION DES DEUX DATASETS
@@ -93,45 +105,57 @@ ADRESSE_ENTREPRISE = "1362 Av. des Platanes, 34970 Lattes"
 # Fonction de calcul de distance via Google Maps API
 def obtenir_distance_google_maps(origin, destination, mode_transport):
 
-    # Mode simulation si clé API absente
+# Mode simulation si clé API absente
     if not GOOGLE_MAPS_API_KEY or GOOGLE_MAPS_API_KEY == "CLE_API":
+
         print("MODE SIMULATION ACTIF : clé API manquante")
+
         return 12.5
 
     # Correspondance entre transport RH et mode Google Maps
     mode_mapping = {
+
         "VÉLO": "bicycling",
         "TROTTINETTE": "bicycling",
         "MARCHE": "walking",
         "COURSE À PIED": "walking",
         "RUNNING": "walking"
-    }
 
+    }
     google_mode = mode_mapping.get(mode_transport, "driving")
 
     # Appel API Google Distance Matrix
     url = "https://maps.googleapis.com/maps/api/distancematrix/json"
+
     params = {
+
         "origins": origin,
         "destinations": destination,
         "mode": google_mode,
         "key": GOOGLE_MAPS_API_KEY
+
     }
 
     try:
+
         response = requests.get(url, params=params).json()
 
         if response["status"] == "OK":
+
             element = response["rows"][0]["elements"][0]
 
             if element["status"] == "OK":
+
                 distance_m = element["distance"]["value"]
+
                 return distance_m / 1000  # conversion mètres → km
+
 
     except Exception as e:
         print(f"Erreur API Google Maps : {e}")
 
     return None
+
 
 # ==============================================================================
 # 6. CALCUL DES DISTANCES + CACHE OPTIMISATION
@@ -141,21 +165,29 @@ print("\nDémarrage du calcul des distances domicile-entreprise...")
 print(f"Nombre total de lignes à traiter : {len(df)}")
 print("-" * 80)
 
+
 # Si fichier déjà existant → on recharge les distances calculées (cache)
 if os.path.exists("../data/donnees_fusionnees.csv"):
-    df_existant = pd.read_excel("../data/donnees_fusionnees.csv")
+    df_existant = pd.read_csv("./data/donnees_fusionnees.csv")
+
 
     # Dictionnaire pour éviter de recalculer les distances déjà connues
     cache_distances = dict(zip(
+
         df_existant["employee_id"],
         df_existant["distance_domicile_entreprise_km"]
+
     ))
+
+
 else:
     cache_distances = {}
+
 
 # Listes de stockage des résultats
 distances_calculees = []
 flags_erreur = []
+
 
 # Parcours ligne par ligne des salariés
 for idx, row in df.iterrows():
@@ -164,17 +196,22 @@ for idx, row in df.iterrows():
     adresse_salarie = row["domicile_address"]
     transport = row["moyen_transport"]
 
-    # ==========================================================
-    # CACHE : évite appel API si distance déjà connue
-    # ==========================================================
-    if salarie_id in cache_distances and pd.notna(cache_distances[salarie_id]):
-        distance_km = cache_distances[salarie_id]
+# ==========================================================
+# CACHE : évite appel API si distance déjà connue
+# ==========================================================
 
+    if salarie_id in cache_distances and pd.notna(cache_distances[salarie_id]):
+
+        distance_km = cache_distances[salarie_id]
         if idx < 10:
             print(f"Salarié {salarie_id} | Cache utilisé | {distance_km} km")
+
     else:
+
+
         # Sinon appel API Google Maps
         distance_km = obtenir_distance_google_maps(
+
             adresse_salarie,
             ADRESSE_ENTREPRISE,
             transport
@@ -182,11 +219,11 @@ for idx, row in df.iterrows():
 
     distances_calculees.append(distance_km)
 
-    # ==========================================================
-    # RÈGLES MÉTIER (contrôle de cohérence mobilité douce)
-    # ==========================================================
-    erreur_declaration = False
+# ==========================================================
+# RÈGLES MÉTIER (contrôle de cohérence mobilité douce)
+# ==========================================================
 
+    erreur_declaration = False
     if distance_km is not None:
 
         # Si marche / course → distance max autorisée 15 km
@@ -199,8 +236,13 @@ for idx, row in df.iterrows():
 
     flags_erreur.append(erreur_declaration)
 
+
+
+
+
     # Affichage debug pour les 10 premières lignes
     if idx < 10:
+
         print(f"Salarié {salarie_id} | {transport} | {distance_km} km | erreur={erreur_declaration}")
 
 print("-" * 80)

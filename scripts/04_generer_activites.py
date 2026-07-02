@@ -4,9 +4,9 @@ import time
 import requests
 from datetime import datetime, timedelta
 
-# Chargement du fichier Excel RH
-# contient les employés + leur sport déclaré
+# Chargement du fichier Excel RH contient les employés + leur sport déclaré
 df = pd.read_csv("./data/donnees_fusionnees.csv")
+
 # Nettoyage des noms de colonnes (supprime espaces invisibles)
 df.columns = df.columns.str.strip()
 
@@ -16,14 +16,15 @@ END = datetime(2025, 12, 31)
 
 # Fonction qui génère une date aléatoire dans l'année
 def random_date():
+
     return START + timedelta(
+
         seconds=random.randint(
             0,
             int((END - START).total_seconds())
-        )
-    )
 
-# Message de démarrage du producer
+        ))
+
 print("STREAM PRODUCER ACTIVÉ")
 
 # Boucle infinie = simulation temps réel (streaming type Strava)
@@ -57,6 +58,7 @@ while True:
 
     # Construction de l'événement (format API / Strava simulé)
     activity = {
+
         # ID salarié
         "id_salarie": int(row["employee_id"]),
 
@@ -77,13 +79,14 @@ while True:
 
         # commentaire humain pour debug / Slack
         "commentaire": f"{row['Prénom']} {row['Nom']} - {sport}"
+
     }
 
     # Envoi de l'événement vers ton API FastAPI
     requests.post("http://localhost:8000/ingest", json=activity)
 
-    # ✔ log de confirmation dans le terminal
-    print(" Event envoyé")
+    # log de confirmation dans le terminal
+    print("✔ Event envoyé")
 
     # pause aléatoire pour simuler un flux réel
     time.sleep(random.randint(2, 5))

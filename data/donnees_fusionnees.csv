@@ -3,7 +3,7 @@ employee_id,Nom,Prénom,Date de naissance,BU,Date d'embauche,salaire_brut,Type d
 19841.0,Ledoux,Monique,1962-01-06,R&D,2020-07-07,74360.0,CDI,26.0,"68 Rue du Port, 34970 Saint-Clément-de-Rivière",VÉHICULE THERMIQUE/ÉLECTRIQUE,AUCUN,22.645,False
 56482.0,Dumont,Michelle,1976-08-09,Ventes,2022-03-29,51390.0,CDI,27.0,"100 Av. de la Gare, 30900 Nîmes",VÉHICULE THERMIQUE/ÉLECTRIQUE,TENNIS,48.718,False
 21886.0,Toussaint,Judith,1962-09-10,Support,2021-12-12,70320.0,CDI,29.0,"53 Av. de la Gare, 34970 Lattes",MARCHE/RUNNING,AUCUN,1.628,False
-81001.0,Bailly,Michelle,1975-04-20,Ventes,2025-02-19,46870.0,CDD,29.0,"74 Rue des Fleurs, 34970 Lattes",MARCHE/RUNNING,AUCUN,1.059,False
+81001.0,Bailly,Michelle,1975-04-20,Ventes,2025-02-19,46870.0,CDD,29.0,"74 Rue des Fleurs, 34970 Lattes",MARCHE/RUNNING,AUCUN,0.803,False
 17757.0,Bazin,Margaret,1982-11-24,Support,2023-04-17,31460.0,CDI,25.0,"Av. de La Mer, 34470 Pérols",VÉLO/TROTTINETTE/AUTRES,BADMINTON,6.355,False
 17036.0,Jacques,Julien,1970-12-19,Marketing,2021-08-21,72480.0,CDI,29.0,"28 Rue du Port, 34140 Mèze",VÉHICULE THERMIQUE/ÉLECTRIQUE,ESCALADE,38.534,False
 36913.0,Pons,Brigitte,1977-12-27,Finance,2020-05-26,59790.0,CDI,28.0,"169 Rue Jean Jaures, 34730 Prades-le-Lez",TRANSPORTS EN COMMUN,AUCUN,30.104,False
@@ -19,7 +19,7 @@ employee_id,Nom,Prénom,Date de naissance,BU,Date d'embauche,salaire_brut,Type d
 99514.0,Olivier,Léon,1962-03-01,Support,2025-02-02,67110.0,CDI,29.0,"1 Rue Gerhardt, 34000 Montpellier",TRANSPORTS EN COMMUN,AUCUN,9.76,False
 43124.0,Laole,Francoise,1970-07-01,Ventes,2021-05-25,44040.0,CDI,28.0,"121 Bis Rue des Carignans, 34790 Grabels",VÉHICULE THERMIQUE/ÉLECTRIQUE,ÉQUITATION,20.772,False
 56632.0,Evrard,Claire,1970-05-03,Finance,2021-03-10,62760.0,CDI,25.0,"70 Av. Jean Jaurès, 30900 Nîmes",VÉHICULE THERMIQUE/ÉLECTRIQUE,VOILE,49.614,False
-28160.0,Humbert,Victor,1972-04-26,Marketing,2024-09-28,33620.0,CDI,25.0,"38 Plan des Arbousiers, 34970 Lattes",VÉLO/TROTTINETTE/AUTRES,AUCUN,6.13,False
+28160.0,Humbert,Victor,1972-04-26,Marketing,2024-09-28,33620.0,CDI,25.0,"38 Plan des Arbousiers, 34970 Lattes",VÉLO/TROTTINETTE/AUTRES,AUCUN,6.18,False
 15493.0,Devaux,Alice,1994-12-21,Support,2020-12-06,73720.0,CDI,28.0,"50 Boulevard de la Mer, 34880 La Grande-Motte",VÉHICULE THERMIQUE/ÉLECTRIQUE,AUCUN,14.515,False
 84233.0,Gauthier,Michelle,1989-01-20,Finance,2024-12-29,73160.0,CDI,26.0,"Av. de la Mer, Montpellier",VÉLO/TROTTINETTE/AUTRES,AUCUN,3.035,False
 17997.0,Dias,Mathilde,1974-10-15,Support,2023-04-02,27040.0,CDI,27.0,"9 Rue Four des Flammes, 34000 Montpellier",VÉHICULE THERMIQUE/ÉLECTRIQUE,TENNIS DE TABLE,6.776,False
@@ -47,7 +47,7 @@ employee_id,Nom,Prénom,Date de naissance,BU,Date d'embauche,salaire_brut,Type d
 27620.0,Hebert,William,1973-03-10,Ventes,2025-03-24,68120.0,CDI,25.0,"18 Rue des Vignes, 34970 Lattes",VÉLO/TROTTINETTE/AUTRES,AUCUN,2.366,False
 36981.0,Schmitt,Jules,1999-03-11,Marketing,2024-11-19,42410.0,CDD,25.0,"47 Av. de la Gare, 34970 Lattes",MARCHE/RUNNING,NATATION,1.628,False
 89328.0,Lambert,Denise,1987-09-05,Ventes,2021-07-01,38930.0,CDI,29.0,"8 Rue de la Vieille, 34000 Montpellier",VÉLO/TROTTINETTE/AUTRES,TENNIS DE TABLE,10.76,False
-50309.0,Lacroix,Olivie,1964-09-22,Support,2021-07-05,32520.0,CDI,26.0,"76 Av. de la Plage, 34410 Sérignan",VÉHICULE THERMIQUE/ÉLECTRIQUE,RUNING,76.674,False
+50309.0,Lacroix,Olivie,1964-09-22,Support,2021-07-05,32520.0,CDI,26.0,"76 Av. de la Plage, 34410 Sérignan",VÉHICULE THERMIQUE/ÉLECTRIQUE,RUNING,76.673,False
 32690.0,Hamon,Paul,1980-05-18,R&D,2020-11-12,36430.0,CDI,29.0,"84 Rue du Port, 34470 Pérols",VÉLO/TROTTINETTE/AUTRES,BADMINTON,7.61,False
 43861.0,Klein,Christine,2001-03-08,Finance,2024-12-10,43810.0,CDI,28.0,"87 Av. de la Plage, 34450 Vias",VÉHICULE THERMIQUE/ÉLECTRIQUE,AUCUN,66.188,False
 17027.0,Boyer,Julie,1995-04-19,Support,2022-09-04,36180.0,CDI,25.0,"Pl. Jean Jaurès, 34000 Montpellier",VÉLO/TROTTINETTE/AUTRES,TENNIS,8.885,False
@@ -61,12 +61,12 @@ employee_id,Nom,Prénom,Date de naissance,BU,Date d'embauche,salaire_brut,Type d
 86633.0,Rodriguez,Léon,1963-03-07,Support,2022-06-29,27260.0,CDI,25.0,"140 All. des Vignes, 34280 La Grande-Motte",VÉHICULE THERMIQUE/ÉLECTRIQUE,RUNING,19.472,False
 29200.0,Gosselin,Joseph,1995-12-19,Support,2022-09-26,34610.0,CDI,27.0,"21 All. Martine Carol, 34070 Montpellier",TRANSPORTS EN COMMUN,AUCUN,7.926,False
 43542.0,Pendragon,Arthur,2002-08-04,R&D,2021-04-30,47370.0,CDI,26.0,"18 Rue des Arbousiers, 34230 Bélarga",VÉHICULE THERMIQUE/ÉLECTRIQUE,JUDO,53.057,False
-64886.0,De Oliveira,Nath,1961-03-27,R&D,2024-10-25,38670.0,CDI,29.0,"4 Pl. des Écoles, 34970 Lattes",MARCHE/RUNNING,AUCUN,1.187,False
+64886.0,De Oliveira,Nath,1961-03-27,R&D,2024-10-25,38670.0,CDI,29.0,"4 Pl. des Écoles, 34970 Lattes",MARCHE/RUNNING,AUCUN,0.93,False
 45140.0,Henry,Roger,1967-09-15,Marketing,2024-11-03,52770.0,CDI,25.0,"84 Rue des Écoles, 34980 Saint-Clément-de-Rivière",VÉLO/TROTTINETTE/AUTRES,AUCUN,22.283,False
-44927.0,Fischer,Hugues,1977-07-22,Ventes,2023-02-08,62370.0,CDI,25.0,"143 Rue des Sansouïres, 34970 Lattes",VÉLO/TROTTINETTE/AUTRES,RANDONNÉE,6.4,False
+44927.0,Fischer,Hugues,1977-07-22,Ventes,2023-02-08,62370.0,CDI,25.0,"143 Rue des Sansouïres, 34970 Lattes",VÉLO/TROTTINETTE/AUTRES,RANDONNÉE,6.473,False
 79837.0,Muller,Alphonse,1970-12-10,Ventes,2020-05-26,30360.0,CDI,27.0,"11 Lot. Mas de Combes, 34230 Popian",VÉHICULE THERMIQUE/ÉLECTRIQUE,AUCUN,44.437,False
-76903.0,Lemaire,Victor,1979-12-30,Finance,2020-11-08,60670.0,CDI,26.0,"260 Chem. du Pompage, 34800 Canet",VÉHICULE THERMIQUE/ÉLECTRIQUE,BASKETBALL,49.237,False
-30351.0,Samson,Julien,1969-03-25,Marketing,2022-12-28,51610.0,CDI,28.0,"21 Rue de la Liberté, 34700 Soumont",VÉHICULE THERMIQUE/ÉLECTRIQUE,AUCUN,65.51,False
+76903.0,Lemaire,Victor,1979-12-30,Finance,2020-11-08,60670.0,CDI,26.0,"260 Chem. du Pompage, 34800 Canet",VÉHICULE THERMIQUE/ÉLECTRIQUE,BASKETBALL,49.056,False
+30351.0,Samson,Julien,1969-03-25,Marketing,2022-12-28,51610.0,CDI,28.0,"21 Rue de la Liberté, 34700 Soumont",VÉHICULE THERMIQUE/ÉLECTRIQUE,AUCUN,68.148,False
 20697.0,Cousin,Antoine,1990-09-18,Marketing,2021-02-15,37620.0,CDI,27.0,"12 Rue William et Catherine Booth, 34070 Montpellier",VÉHICULE THERMIQUE/ÉLECTRIQUE,RANDONNÉE,8.577,False
 37830.0,Toussaint,Alexandre,1981-01-03,Ventes,2021-07-08,28050.0,CDI,26.0,"18 Rue des Agapanthes, 34470 Pérols",TRANSPORTS EN COMMUN,RANDONNÉE,4.032,False
 34678.0,Mendes,Astrid,1972-01-31,Finance,2023-11-01,59520.0,CDI,27.0,"32 Av. Jean - Louis Etienne, 34740 Vendargues",VÉHICULE THERMIQUE/ÉLECTRIQUE,RANDONNÉE,12.425,False
@@ -94,7 +94,7 @@ employee_id,Nom,Prénom,Date de naissance,BU,Date d'embauche,salaire_brut,Type d
 60437.0,Delattre,Danielle,1968-10-24,Finance,2023-09-23,29090.0,CDI,27.0,"328 All. de l'Iliade, 34280 La Grande-Motte",VÉHICULE THERMIQUE/ÉLECTRIQUE,AUCUN,16.352,False
 33872.0,Poirier,Laure,1979-10-03,Ventes,2022-08-07,51020.0,CDI,26.0,"162 Av. de la Paix, 34290 Montblanc",VÉHICULE THERMIQUE/ÉLECTRIQUE,AUCUN,61.698,False
 23842.0,Schneider,Jules,1986-07-25,Ventes,2024-04-05,51010.0,CDI,29.0,"79 Rue des Écoles, 34920 Le Crès",TRANSPORTS EN COMMUN,VOILE,12.448,False
-66386.0,Lacroix,Susanne,1961-01-08,Finance,2025-01-15,55310.0,CDI,26.0,"189 Pl. des Écoles, 34970 Lattes",MARCHE/RUNNING,BADMINTON,1.16,False
+66386.0,Lacroix,Susanne,1961-01-08,Finance,2025-01-15,55310.0,CDI,26.0,"189 Pl. des Écoles, 34970 Lattes",MARCHE/RUNNING,BADMINTON,0.904,False
 75791.0,Olivier,Caroline,1987-05-30,Marketing,2021-07-07,56010.0,CDI,27.0,"Rue des Écoles, 34120 Lézignan-la-Cèbe",VÉHICULE THERMIQUE/ÉLECTRIQUE,RUNING,70.012,False
 55153.0,Delmas,Colette,1971-08-28,Finance,2022-10-01,42280.0,CDI,29.0,"178 Rue de la Lucques, 34150 Aniane",VÉHICULE THERMIQUE/ÉLECTRIQUE,BOXE,45.201,False
 91916.0,Legrand,Margaud,1983-10-13,Finance,2020-05-19,47530.0,CDI,27.0,"72 Rue des Pins, 34470 Pérols",VÉLO/TROTTINETTE/AUTRES,RUGBY,4.407,False
@@ -129,10 +129,10 @@ employee_id,Nom,Prénom,Date de naissance,BU,Date d'embauche,salaire_brut,Type d
 20377.0,Boutin,Génée,1980-11-29,Ventes,2022-06-06,42670.0,CDI,26.0,"140 Rue du Stade, 30920 Codognan",VÉHICULE THERMIQUE/ÉLECTRIQUE,AUCUN,35.903,False
 29456.0,Gosselin,Capucine,2002-02-13,Ventes,2024-02-18,48130.0,CDI,26.0,"2 Rue Palladio, 34970 Lattes",VÉLO/TROTTINETTE/AUTRES,AUCUN,2.901,False
 88193.0,Gomez,Daniel,1967-09-24,R&D,2022-07-05,62410.0,CDI,25.0,"194 Rue des Amours d'Antan, 34980 Saint-Gély-du-Fesc",VÉHICULE THERMIQUE/ÉLECTRIQUE,RANDONNÉE,33.11,False
-60948.0,Guillot,Gégoire,1978-07-31,Ventes,2024-12-02,33130.0,CDD,29.0,"40 Pl. des Écoles, 34970 Lattes",MARCHE/RUNNING,RUNING,1.16,False
+60948.0,Guillot,Gégoire,1978-07-31,Ventes,2024-12-02,33130.0,CDD,29.0,"40 Pl. des Écoles, 34970 Lattes",MARCHE/RUNNING,RUNING,0.904,False
 92440.0,Lacroix,Sébastien,1975-02-13,Marketing,2024-09-27,35320.0,CDD,27.0,"369 Chem. du Thym, 34170 Castelnau-le-Lez",TRANSPORTS EN COMMUN,TRIATHLON,9.977,False
 86486.0,Marchand,Emmanuel,1990-12-22,Ventes,2022-06-19,37120.0,CDI,27.0,"3 All. des Cévennes, 34630 Saint-Thibéry",VÉHICULE THERMIQUE/ÉLECTRIQUE,JUDO,57.1,False
-56263.0,Hernandez,William,1975-02-28,Support,2021-12-23,34090.0,CDI,29.0,"246 Rue du Boulidou, 34980 Saint-Clément-de-Rivière",VÉHICULE THERMIQUE/ÉLECTRIQUE,BOXE,23.498,False
+56263.0,Hernandez,William,1975-02-28,Support,2021-12-23,34090.0,CDI,29.0,"246 Rue du Boulidou, 34980 Saint-Clément-de-Rivière",VÉHICULE THERMIQUE/ÉLECTRIQUE,BOXE,23.823,False
 59040.0,Lefebvre,William,1984-01-20,Finance,2023-07-31,38460.0,CDI,29.0,"9 Rue du Lierre, 34850 Pinet",VÉHICULE THERMIQUE/ÉLECTRIQUE,JUDO,48.077,False
 29450.0,Lambert,Julie,1990-02-14,R&D,2023-10-07,35470.0,CDI,25.0,"36 Rue de la Condamine, 34970 Lattes",VÉHICULE THERMIQUE/ÉLECTRIQUE,RANDONNÉE,2.561,False
 74171.0,Grondin,Bertrand,1988-04-26,Finance,2024-12-09,72520.0,CDI,29.0,"49 Pl. du Marché, 34250 Palavas-les-Flots",VÉLO/TROTTINETTE/AUTRES,AUCUN,10.863,False
