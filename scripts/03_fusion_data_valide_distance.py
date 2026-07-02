@@ -39,8 +39,8 @@ load_dotenv(dotenv_path=env_path)
 GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY")
 
 # Debug pour vérifier que la config est bien chargée
-print(f"DEBUG: Chargement du .env depuis {env_path}")
-print(f"DEBUG: Clé API trouvée : {'Oui' if GOOGLE_MAPS_API_KEY else 'Non'}")
+print(f"Chargement du .env depuis {env_path}")
+print(f"Clé API trouvée : {'Oui' if GOOGLE_MAPS_API_KEY else 'Non'}")
 
 
 # ==============================================================================
@@ -148,7 +148,7 @@ def obtenir_distance_google_maps(origin, destination, mode_transport):
 
                 distance_m = element["distance"]["value"]
 
-                return distance_m / 1000  # conversion mètres → km
+                return distance_m / 1000  
 
 
     except Exception as e:

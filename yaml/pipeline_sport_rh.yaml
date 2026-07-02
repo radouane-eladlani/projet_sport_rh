@@ -157,7 +157,7 @@ tasks:
 
   - id: notification_slack_succes
     type: io.kestra.plugin.core.http.Request
-    uri: "https://hooks.slack.com/services/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"
+    uri: "{{ envs.SLACK_WEBHOOK_URL_YML }}"
     method: POST
     contentType: application/json
     body: |
@@ -169,7 +169,7 @@ tasks:
 errors:
   - id: notification_slack_echec
     type: io.kestra.plugin.core.http.Request
-    uri: "https://hooks.slack.com/services/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"
+    uri: "{{ envs.SLACK_WEBHOOK_URL_YML }}"
     method: POST
     contentType: application/json
     body: |
