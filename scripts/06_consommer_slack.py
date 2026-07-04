@@ -161,17 +161,17 @@ for msg in consumer:
 # 7. EXTRACTION DES DONNÉES
 # ======================================================================
 
-    # Sport pratiqué (normalisation)
-    sport = (after.get("Type") or "UNKNOWN").upper().strip()
+    # Sport pratiqué (Debezium 
+    sport = (after.get("type") or "UNKNOWN").upper().strip()
 
-    # Distance en mètres
-    distance_m = after.get("Distance") or 0
+    # Distance en mètres (Debezium : "distance")
+    distance_m = after.get("distance") or 0
 
-    # ID salarié
-    user_id = after.get("ID salarié") or "inconnu"
+    # ID salarié (Debezium : "id salarié" ou "id_salarie" selon ta table)
+    user_id = after.get("id salarié") or after.get("id_salarie") or "inconnu"
 
-    # Commentaire contenant prénom + nom
-    full_comment = after.get("Commentaire") or ""
+    # Commentaire (Debezium : "commentaire")
+    full_comment = after.get("commentaire") or ""
 
     # Extraction du nom propre
     if " - " in full_comment:
